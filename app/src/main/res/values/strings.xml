@@ -12,4 +12,5 @@
     <string name="place_holder">Something something</string>
     <string name="landmark_toggle">landmarks</string>
     <string name="hue_toggle">hue shift</string>
+    <string name="refresh">Refresh</string>
 </resources>

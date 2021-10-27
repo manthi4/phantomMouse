@@ -77,27 +77,5 @@ public class Sc1class extends Fragment {
         Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview);
     }
 
-//
-//    private void startCamera() {
-//
-//        PreviewConfig previewConfig = PreviewConfig.Builder().apply {
-//            setTargetAspectRatio(Rational(3, 1))
-//            setTargetResolution(Size(500, 1500))
-//        }.build();
-//
-//        Preview preview = Preview(previewConfig);
-//
-//        // 每次更新取景器时，重新计算布局
-//        preview.setSurfaceProvider(preview.se); {
-//
-////            // 要更新surface etexture，我们必须删除它并重新添加它
-//            ViewGroup parent = (ViewGroup) viewFinder.getParent();
-//            parent.removeView(viewFinder);
-//            parent.addView(viewFinder, 0);
-//
-//            viewFinder.setSurfaceTexture(it.surfaceTexture);
-//        }
-//
-//        CameraX.bindToLifecycle(this, preview)
-//    }
+
 }

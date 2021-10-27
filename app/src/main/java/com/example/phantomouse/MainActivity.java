@@ -10,10 +10,12 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private BleMouse mouse = new BleMouse(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mouse.getProxy();
         setContentView(R.layout.activity_main);
 
         BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
@@ -40,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
                             selectedFragment = new Sc2class();
                             break;
                         case R.id.nav_settings:
-                            selectedFragment = new Sc3class();
+                            selectedFragment = new Sc3class(mouse);
                             break;
                     }
                     getSupportFragmentManager().beginTransaction().replace(R.id.frameL,
