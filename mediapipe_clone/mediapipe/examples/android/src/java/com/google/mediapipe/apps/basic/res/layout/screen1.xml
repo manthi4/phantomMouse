@@ -58,15 +58,13 @@
                         android:layout_weight="1"
                         android:text="@string/landmark_toggle" />
 
-                    <com.google.android.material.switchmaterial.SwitchMaterial
+                    <Switch
                         android:id="@+id/switch2"
                         android:layout_width="wrap_content"
                         android:layout_height="match_parent"
                         android:layout_margin="10dp"
                         android:layout_weight="1"
-                        android:padding="10dp"
-                        android:text="@string/hue_toggle"
-                        android:textColor="#FBFBFD" />
+                        android:text="@string/landmark_toggle" />
 
                 </LinearLayout>
 
