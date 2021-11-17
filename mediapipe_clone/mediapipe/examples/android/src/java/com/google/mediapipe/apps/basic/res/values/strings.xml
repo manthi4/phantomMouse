@@ -13,4 +13,5 @@
     <string name="landmark_toggle">landmarks</string>
     <string name="hue_toggle">hue shift</string>
     <string name="refresh">Refresh</string>
+    <string name="no_camera_access" translatable="false">Please grant camera permissions.</string>
 </resources>

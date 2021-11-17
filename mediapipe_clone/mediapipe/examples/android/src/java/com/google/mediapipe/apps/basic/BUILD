@@ -25,7 +25,7 @@ android_library(
         "//mediapipe/java/com/google/mediapipe/components:android_camerax_helper",
         "//mediapipe/java/com/google/mediapipe/components:android_components",
         "//mediapipe/java/com/google/mediapipe/framework:android_framework",
-        # "//mediapipe/java/com/google/mediapipe/glutil",
+        "//mediapipe/java/com/google/mediapipe/glutil",
         "//third_party:androidx_appcompat",
         "//third_party:androidx_constraint_layout",
         "//third_party:androidx_core",
@@ -39,7 +39,7 @@ android_library(
         "//third_party:androidx_annotation",
         "//third_party:androidx_fragment",
         
-        # "//third_party:opencv",
+        "//third_party:opencv",
         "@maven//:androidx_concurrent_concurrent_futures",
         "@maven//:com_google_guava_guava",
     ],
