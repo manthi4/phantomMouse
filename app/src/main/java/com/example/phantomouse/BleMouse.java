@@ -168,6 +168,8 @@ public class BleMouse {
         Boolean sent = mBlHidDevice.sendReport(mBtDevice, 0, data);
     }
 
+    public static int LeftClick = 1;
+    public static int RightClick = 2;
     public void clickCommand(int click) { // 1= L, 2 = R
         byte[] data = (click == 1) ?
                 new byte[]{(byte) 0b1, (byte) 0, (byte) 0,}

@@ -24,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         //I added this if statement to keep the selected fragment when rotating the device
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.frameL,
-                    new Sc1class()).commit();
+                    new Sc1class(mouse)).commit();
         }
     }
 
@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
 
                     switch (item.getItemId()) {
                         case R.id.nav_bluetooth:
-                            selectedFragment = new Sc1class();
+                            selectedFragment = new Sc1class(mouse);
                             break;
                         case R.id.nav_callibrate:
                             selectedFragment = new Sc2class();

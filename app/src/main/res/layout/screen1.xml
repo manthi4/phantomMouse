@@ -68,7 +68,7 @@
                         android:layout_weight="1"
                         android:padding="10dp"
                         android:text="@string/hue_toggle"
-                        android:textColor="#FBFBFD" />
+                        android:textColor="#283593" />
 
                 </LinearLayout>
 
@@ -87,7 +87,8 @@
                         android:layout_centerHorizontal="true"
                         android:layout_centerVertical="true"
                         android:text="@string/place_holder"
-                        android:textSize="60sp" />
+                        android:textColor="#0A0D0E"
+                        android:textSize="14sp" />
 
                 </androidx.cardview.widget.CardView>
 

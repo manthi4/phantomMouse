@@ -16,7 +16,6 @@ import com.google.mediapipe.components.CameraXPreviewHelper;
 import com.google.mediapipe.components.ExternalTextureConverter;
 import com.google.mediapipe.components.FrameProcessor;
 import com.google.mediapipe.components.PermissionHelper;
-import com.google.mediapipe.formats.proto.DetectionProto;
 import com.google.mediapipe.formats.proto.LandmarkProto;
 import com.google.mediapipe.framework.AndroidAssetUtil;
 import com.google.mediapipe.framework.AndroidPacketCreator;
@@ -58,22 +57,24 @@ public class MPipe {
     // {@link SurfaceTexture} where the camera-preview frames can be accessed.
     private SurfaceTexture previewFrameTexture;
     // {@link SurfaceView} that displays the camera-preview frames processed by a MediaPipe graph.
-    private SurfaceView previewDisplayView;
+    private final SurfaceView previewDisplayView;
 
     // Creates and manages an {@link EGLContext}.
-    private EglManager eglManager;
+    private final EglManager eglManager;
     // Converts the GL_TEXTURE_EXTERNAL_OES texture from Android camera into a regular texture to be
     // consumed by {@link FrameProcessor} and the underlying MediaPipe graph.
     private ExternalTextureConverter converter;
 
-    private Activity activity;
-    private  TextView logZone;
+    private final Activity activity;
+    private final TextView logZone;
+    private final BleMouse mouse;
 
-    public MPipe (SurfaceView _previewDisplayView, View view, Context context, Activity _activity, TextView _logZone){ //SurfaceView _previewDisplayView, View view, Context context, Activity activity
+    public MPipe(SurfaceView previewDisplayView, View view, Context context, Activity activity, TextView logZone, BleMouse mouse) { //SurfaceView _previewDisplayView, View view, Context context, Activity activity
 
-        activity = _activity;
-        previewDisplayView = _previewDisplayView;
-        logZone = _logZone;
+        this.mouse = mouse;
+        this.activity = activity;
+        this.previewDisplayView = previewDisplayView;
+        this.logZone = logZone;
 
         setupPreviewDisplayView(view);
 
@@ -104,82 +105,112 @@ public class MPipe {
                     List<LandmarkProto.NormalizedLandmarkList> multiHandLandmarks =
                             PacketGetter.getProtoVector(packet, LandmarkProto.NormalizedLandmarkList.parser());
                     activity.runOnUiThread(new Runnable() {
-                                               @Override
-                                               public void run() {
-                                                   logZone.setText(
-                                                           getMultiHandLandmarksDebugString(multiHandLandmarks)
-                                                   );
+                           @Override
+                           public void run() {
+                               logZone.setText(
+                                       getMultiHandLandmarksDebugString(multiHandLandmarks)
+                               );
 
-                                               }
-                                           }
-
+                           }
+                       }
                     );
 
-
-//                    System.out.println(
-//                            "[TS:"
-//                                    + packet.getTimestamp()
-//                                    + "] "
-//                                    + getMultiHandLandmarksDebugString(multiHandLandmarks));
-                });
-//        processor.addPacketCallback(
-//                OUTPUT_LANDMARKS_STREAM_NAME,
-//                    (packet) -> {
-//                        List valDetections;
-//
-//                        valDetections = PacketGetter.getProtoVector(packet,
-//                                DetectionProto.Detection.parser());
-//                        if (valDetections == null) {
-//                            Log.d("OPFH", "detections null");
-//                        } else {
-//                            Log.d("OPF", "detections not null 0: ${valDetections}"); //detections.score
-//                        }
-//                    }
-//
-//            );
-
-//        if (Log.isLoggable(TAG, Log.VERBOSE)) {
-//            processor.addPacketCallback(
-//                    "multi_palm_detections",
-//                    (packet) -> {
-//                        List valDetections;
-//                        valDetections = PacketGetter.getProtoVector(packet,
-//                                DetectionProto.Detection.parser());
-//                        if (valDetections == null) {
-//                            Log.d("OPFH", "detections null");
-//                        } else {
-//                            Log.d("OPF", "detections not null 0: ${valDetections}"); //detections.score
-//                        }
-//                    }
-//
-//            );
-//        }
+                }
+        );
     }
 
 
+    double prev5x = 0;
+    double prev5y = 0;
+    double prev5z = 0;
     private String getMultiHandLandmarksDebugString(List<LandmarkProto.NormalizedLandmarkList> multiHandLandmarks) {
         if (multiHandLandmarks.isEmpty()) {
             return "No hand landmarks";
         }
         String multiHandLandmarksStr = "Number of hands detected: " + multiHandLandmarks.size() + "\n";
         int handIndex = 0;
+
+
+
         for (LandmarkProto.NormalizedLandmarkList landmarks : multiHandLandmarks) {
             multiHandLandmarksStr +=
                     "\t#Hand landmarks for hand[" + handIndex + "]: " + landmarks.getLandmarkCount() + "\n";
             int landmarkIndex = 0;
-            for (LandmarkProto.NormalizedLandmark landmark : landmarks.getLandmarkList()) {
-                multiHandLandmarksStr +=
-                        "\t\tLandmark ["
-                                + landmarkIndex
-                                + "]: ("
-                                + landmark.getX()
-                                + ", "
-                                + landmark.getY()
-                                + ", "
-                                + landmark.getZ()
-                                + ")\n";
-                ++landmarkIndex;
+//            for (LandmarkProto.NormalizedLandmark landmark : landmarks.getLandmarkList()) {
+//                multiHandLandmarksStr +=
+//                        "\t\tLandmark ["
+//                                + landmarkIndex
+//                                + "]: ("
+//                                + landmark.getX()
+//                                + ", "
+//                                + landmark.getY()
+//                                + ", "
+//                                + landmark.getZ()
+//                                + ")\n";
+//                ++landmarkIndex;
+//            }
+
+            //landmark 5
+            LandmarkProto.NormalizedLandmark landmark5 = landmarks.getLandmarkList().get(5);
+            multiHandLandmarksStr +=
+                    "\t\tLandmark ["
+                            + 5
+                            + "]: \n\tx: "
+                            + String.format("%.2f",landmark5.getX())
+//                            + landmark5.getX()
+                            + "\ty: "
+                            + String.format("%.2f",landmark5.getY())
+//                            + landmark5.getY()
+                            + "\tz: "
+                            + String.format("%.2f",landmark5.getZ())
+//                            + landmark5.getZ()
+                            + ")\n";
+
+            //landmark 5
+            LandmarkProto.NormalizedLandmark landmark17 = landmarks.getLandmarkList().get(17);
+            multiHandLandmarksStr +=
+                    "\t\tLandmark ["
+                            + 17
+                            + "]: \n\tx: "
+                            + String.format("%.2f",landmark17.getX())
+//                            + landmark17.getX()
+                            + "\ty: "
+                            + String.format("%.2f",landmark17.getY())
+//                            + landmark17.getY()
+                            + "\tz: "
+                            + String.format("%.2f",landmark17.getZ())
+//                            + landmark17.getZ()
+                            + ")\n";
+
+
+            double xdiff = landmark17.getX() - landmark5.getX();
+            double vdiff = landmark5.getY() - landmark17.getY(); //positive means 17 higher than 5
+
+            multiHandLandmarksStr += "\nprevX: " + String.format("%.2f",prev5x) + "\tcurrX: " + String.format("%.2f",landmark5.getX());
+            double xdelta = prev5x - landmark5.getX(); //negative if moved right
+            prev5x = landmark5.getX();
+
+            double zdelta = prev5z - landmark5.getZ(); //positive if moving away
+            prev5z = landmark5.getZ();
+
+            if(vdiff > xdiff){
+                mouse.clickCommand(BleMouse.LeftClick);
             }
+
+            if(-1*vdiff > xdiff){
+                mouse.clickCommand(BleMouse.RightClick);
+            }
+
+            if(Math.abs(vdiff) < xdiff){
+                mouse.clickReleaseCommand();
+            }
+
+            xdelta = xdelta*-100;
+            zdelta = zdelta*((zdelta > 0)?-100:-100);
+
+            multiHandLandmarksStr += "\ndeltax: " + String.format("%.2f",xdelta) + "\tdeltaz: " + String.format("%.2f",zdelta);
+            mouse.moveCommand((int) xdelta, (int)zdelta);
+
             ++handIndex;
         }
         return multiHandLandmarksStr;
@@ -230,7 +261,7 @@ public class MPipe {
         return new Size(width, height);
     }
 
-    public void onResume(){
+    public void onResume() {
         converter =
                 new ExternalTextureConverter(
                         eglManager.getContext(), 2);
@@ -241,7 +272,7 @@ public class MPipe {
         }
     }
 
-    public  void onPause(){
+    public void onPause() {
         converter.close();
         // // Hide preview display until we re-open the camera again.
         previewDisplayView.setVisibility(View.GONE);

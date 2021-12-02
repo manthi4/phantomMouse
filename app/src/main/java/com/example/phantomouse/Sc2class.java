@@ -35,7 +35,7 @@ public class Sc2class extends Fragment {
         super.onStart();
         newtext = (TextView) getActivity().findViewById(R.id.logMessage);
         logit("hi");
-        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
+//        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
     }
 
     public void logit(String s){
@@ -45,13 +45,13 @@ public class Sc2class extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mPipe.onResume();
+//        mPipe.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mPipe.onPause();
+//        mPipe.onPause();
     }
 
     @Override
