@@ -20,7 +20,7 @@ import com.google.mediapipe.components.PermissionHelper;
 
 public class Sc2class extends Fragment {
     private static final String TAG = "S2ClassFrag";
-    private MPipe mPipe;
+//    private MPipe mPipe;
     private  TextView newtext;
 
     @Nullable
@@ -35,6 +35,7 @@ public class Sc2class extends Fragment {
         super.onStart();
         newtext = (TextView) getActivity().findViewById(R.id.logMessage);
         logit("hi");
+
 //        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
     }
 

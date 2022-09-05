@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.camera.view.PreviewView;
 import androidx.fragment.app.Fragment;
 
 
@@ -22,15 +23,16 @@ import java.util.ArrayList;
 
 public class Sc1class extends Fragment {
     private static final String TAG = "S2ClassFrag";
-    private MPipe mPipe;
+//    private MPipe mPipe;
+    private TFLiteModel tfLiteModel;
     private  TextView newtext;
 
-    private BleMouse mouse;
+//    private BleMouse mouse;
 
 
     public Sc1class(BleMouse mouse){
         super();
-        this.mouse = mouse;
+//        this.mouse = mouse;
 
     }
 
@@ -46,7 +48,10 @@ public class Sc1class extends Fragment {
         super.onStart();
         newtext = (TextView) getActivity().findViewById(R.id.logMessage);
         logit("hi");
-        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext, mouse); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
+        PreviewView prev = getView().findViewById(R.id.previewDisplaySurface);
+        SurfaceView draw = getView().findViewById(R.id.drawingSurface);
+        tfLiteModel = new TFLiteModel(prev, draw, getView(), getContext(), getActivity(), newtext);
+//        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext, mouse); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
     }
 
     public void logit(String s){
@@ -56,13 +61,15 @@ public class Sc1class extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        mPipe.onResume();
+//        mPipe.onResume();
+        tfLiteModel.onResume();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        mPipe.onPause();
+//        mPipe.onPause();
+        tfLiteModel.onPause();
     }
 
     @Override
