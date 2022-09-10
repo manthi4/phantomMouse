@@ -12,14 +12,12 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
-import android.graphics.SurfaceTexture;
 import android.media.Image;
 import android.util.Log;
 import android.util.Size;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.camera.core.Camera;
@@ -35,7 +33,6 @@ import androidx.lifecycle.LifecycleOwner;
 
 import org.tensorflow.lite.DataType;
 import org.tensorflow.lite.gpu.CompatibilityList;
-import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.model.Model;
 import com.example.phantomouse.ml.ProstheticLandmarkModel;
@@ -44,24 +41,11 @@ import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.mediapipe.components.CameraHelper;
-import com.google.mediapipe.components.CameraXPreviewHelper;
-import com.google.mediapipe.components.ExternalTextureConverter;
-import com.google.mediapipe.components.FrameProcessor;
-import com.google.mediapipe.components.PermissionHelper;
-import com.google.mediapipe.formats.proto.LandmarkProto;
-import com.google.mediapipe.framework.AndroidAssetUtil;
-import com.google.mediapipe.framework.AndroidPacketCreator;
-import com.google.mediapipe.framework.Packet;
-import com.google.mediapipe.framework.PacketGetter;
-import com.google.mediapipe.glutil.EglManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -71,36 +55,40 @@ public class TFLiteModel {
     private int REQUEST_CODE_PERMISSIONS = 999; // Return code after asking for permission
     private List<String> REQUIRED_PERMISSIONS = Arrays.asList(Manifest.permission.CAMERA); // permission needed
 
-    private static final CameraHelper.CameraFacing CAMERA_FACING = CameraHelper.CameraFacing.FRONT;
 
-    // {@link SurfaceTexture} where the camera-preview frames can be accessed.
-    private SurfaceTexture previewFrameTexture;
-    // {@link SurfaceView} that displays the camera-preview frames processed by a MediaPipe graph.
+    // {@link previewDisplayView} that displays the camera-preview frames.
     private final PreviewView previewDisplayView;
+    // drawView where the landmarks are drawn
     private final SurfaceView drawView;
 
-    private final Activity activity;
+    private final Activity parentActivity;
     private final TextView logZone;
-//    private final BleMouse mouse;
+    private final BleMouse mouse;
     private final Context parentContext;
     private Camera camera;
     private Executor cameraExecutor;
 
+    public Boolean showLandmarks;
+    public Boolean showBBox;
+    private Boolean paused = false;
+
+    private ListenableFuture cameraProviderFuture;
 
 
-    public TFLiteModel(PreviewView previewDisplayView, SurfaceView drawingView, View view, Context context, Activity activity, TextView logZone){//}, BleMouse mouse) { //SurfaceView _previewDisplayView, View view, Context context, Activity activity
+    public TFLiteModel(PreviewView previewDisplayView, SurfaceView drawingView, View view, Context context, Activity activity, TextView logZone, BleMouse mouse) {
 
-//        this.mouse = mouse;
-        this.activity = activity;
+        this.mouse = mouse;
+        this.parentActivity = activity;
         this.previewDisplayView = previewDisplayView;
         this.drawView = drawingView;
         this.logZone = logZone;
         this.parentContext = context;
         this.cameraExecutor = Executors.newSingleThreadExecutor();
 
-        setupPreviewDisplayView(view);
-//        AndroidAssetUtil.initializeNativeAssetManager(context);
+        this.showLandmarks = false;
+        this.showBBox = true;
 
+        setupPreviewDisplayView(view);
         drawView.setZOrderOnTop(true);
         drawView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
@@ -112,31 +100,21 @@ public class TFLiteModel {
 
     }
 
-    /**
-     * Check all permissions are granted - use for Camera permission in this example.
-     */
+//    Check all permissions are granted - use for Camera permission in this example.
     private void checkAndRequestPermissions(){
-
-        boolean flag = true;
+        boolean flag = false;
         for(String it : REQUIRED_PERMISSIONS) {
-            if(!(ContextCompat.checkSelfPermission(this.parentContext, it) == PackageManager.PERMISSION_GRANTED)){
-                flag = false;
+            if(ContextCompat.checkSelfPermission(this.parentContext, it) != PackageManager.PERMISSION_GRANTED){
+                flag = true;
             }
         }
-
-        if (!flag) {
+        if (flag) {
             ActivityCompat.requestPermissions(
-                    this.activity, (String[]) REQUIRED_PERMISSIONS.toArray(), REQUEST_CODE_PERMISSIONS
+                    this.parentActivity, (String[]) REQUIRED_PERMISSIONS.toArray(), REQUEST_CODE_PERMISSIONS
             );
         }
-
-
     }
 
-
-    double prev5x = 0;
-    double prev5y = 0;
-    double prev5z = 0;
     /*
     private String getMultiHandLandmarksDebugString(List<LandmarkProto.NormalizedLandmarkList> multiHandLandmarks) {
         if (multiHandLandmarks.isEmpty()) {
@@ -233,10 +211,6 @@ public class TFLiteModel {
 */
 
     public void setupPreviewDisplayView(View view) {
-//        previewDisplayView.setVisibility(View.GONE);
-//        ViewGroup viewGroup = view.findViewById(R.id.preview_display_layout);
-//        viewGroup.addView(previewDisplayView);
-
 //        previewDisplayView
 //                .getHolder()
 //                .addCallback(
@@ -260,19 +234,14 @@ public class TFLiteModel {
 
 //    protected void onPreviewDisplaySurfaceChanged(
 //        SurfaceHolder holder, int format, int width, int height) {
-//
 //        Size viewSize = computeViewSize(width, height);
-//
-//
-//
 //    }
 
-    protected Size computeViewSize(int width, int height) {
-        return new Size(width, height);
-    }
+//    protected Size computeViewSize(int width, int height) {
+//        return new Size(width, height);
+//    }
 
     public void onResume() {
-
         // Request camera permissions
         checkAndRequestPermissions();
         startCamera();
@@ -280,25 +249,35 @@ public class TFLiteModel {
         drawView.setVisibility(View.VISIBLE);
     }
 
-    public void onPause() {
-
+    public void onPause(){
+        paused = true;
         // // Hide preview display until we re-open the camera again.
         previewDisplayView.setVisibility(View.GONE);
         drawView.setVisibility(View.GONE);
+        try {
+            ProcessCameraProvider cameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
+            cameraProvider.unbindAll();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("paused");
+
+//        ImageAnalyzer.
     }
 
     public void startCamera() {
-        ListenableFuture cameraProviderFuture = ProcessCameraProvider.getInstance(this.parentContext);
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this.parentContext);
+
 
         cameraProviderFuture.addListener(new Runnable(){
-
             @Override
             public void run () {
                 // Used to bind the lifecycle of cameras to the lifecycle owner
                 ProcessCameraProvider cameraProvider;
                 try {
                     cameraProvider = (ProcessCameraProvider) cameraProviderFuture.get();
-
 
                     Preview preview = new Preview.Builder().build();
 
@@ -318,15 +297,13 @@ public class TFLiteModel {
                     // Select camera, back is the default. If it is not available, choose front camera
                     CameraSelector cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA;
 
-
-
                     // Unbind use cases before rebinding
                     cameraProvider.unbindAll();
 
                     // Bind use cases to camera - try to bind everything at once and CameraX will find
                     // the best combination.
                     camera = cameraProvider.bindToLifecycle(
-                            (LifecycleOwner) activity, cameraSelector, preview, imageAnalyzer
+                            (LifecycleOwner) parentActivity, cameraSelector, preview, imageAnalyzer
                     );
 
                     // Attach the preview to preview view, aka View Finder
@@ -336,15 +313,8 @@ public class TFLiteModel {
                     Log.e(TAG, "Use case binding failed", exc);
                     exc.printStackTrace();
                 }
-//                catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                } catch (ExecutionException e) {
-//                    e.printStackTrace();
-//                }
-
             }
             },ContextCompat.getMainExecutor(this.parentContext));
-
     }
 
     private class ImageAnalyzer implements ImageAnalysis.Analyzer{
@@ -353,6 +323,7 @@ public class TFLiteModel {
         private ProstheticLandmarkModel handTrackingModel;
         private Paint red;
         private Paint rpaint;
+        private Paint black;
         private YuvToRgbConverter yuvToRgbConverter;
         private Bitmap bitmapBuffer;
         private Matrix rotationMatrix;
@@ -388,6 +359,11 @@ public class TFLiteModel {
             rpaint.setColor(Color.GREEN);
             rpaint.setAntiAlias(true);
 
+            black = new Paint();
+            black.setStrokeWidth(7f);
+
+
+
         }
 
 
@@ -414,7 +390,9 @@ public class TFLiteModel {
 
         @Override
         public void analyze(ImageProxy imageProxy) {
-
+            if (paused){
+                return;
+            }
             ArrayList<Landmark> items = new ArrayList<Landmark>();
 
             // TODO 2: Convert Image to Bitmap then to TensorImage -> then to ByteBuffer for hand tracking
@@ -429,7 +407,7 @@ public class TFLiteModel {
             //norm to 0,1
             float[] htImageArr = tensorImageToNormFloatArray(htImage);
 
-            System.out.println("HTIMAGE ARR SHAPE: " + htImageArr.length);
+//            System.out.println("HTIMAGE ARR SHAPE: " + htImageArr.length);
 
             int[] dims = {1, 224, 224, 3};
             TensorBuffer htBuf = TensorBuffer.createFixedSize(dims, DataType.FLOAT32);
@@ -437,9 +415,9 @@ public class TFLiteModel {
 
             //val inputFeature0 = TensorBuffer.createFixedSize(intArrayOf(1, 224, 224, 3), DataType.FLOAT32)
 
-            System.out.println("SIZE: " + tfImage.getWidth() + " " + tfImage.getHeight() + " " + tfImage.getDataType());
-            System.out.println("COL " + tfImage.getColorSpaceType());
-            System.out.println("shape " +  tfImage.getTensorBuffer().toString());
+//            System.out.println("SIZE: " + tfImage.getWidth() + " " + tfImage.getHeight() + " " + tfImage.getDataType());
+//            System.out.println("COL " + tfImage.getColorSpaceType());
+//            System.out.println("shape " +  tfImage.getTensorBuffer().toString());
             //System.out.println("shape " + inputFeature0.buffer.toString())
 
             //inputFeature0.loadBuffer(tfImage)
@@ -447,11 +425,11 @@ public class TFLiteModel {
             // Runs hand tracking model inference and gets results
             ProstheticLandmarkModel.Outputs outputs = handTrackingModel.process(htBuf);
             TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
-            System.out.println("Output Shape: " + Arrays.toString(outputFeature0.getShape()));
+//            System.out.println("Output Shape: " + Arrays.toString(outputFeature0.getShape()));
 
             //convert output tensor into landmarks
             float[] outputFloatArr = outputFeature0.getFloatArray();
-            System.out.println("float arr shape: " + outputFloatArr.length);
+//            System.out.println("float arr shape: " + outputFloatArr.length);
 
             int ind = 0;
             for (int i = 0; i < outputFloatArr.length; i += 2){
@@ -462,15 +440,17 @@ public class TFLiteModel {
                 );
                 ind++;
 
-                System.out.println("Landmark: " + ind + " | " + outputFeature0.getFloatValue(i) + ", " + outputFeature0.getFloatValue(i+1));
+//                System.out.println("Landmark: " + ind + " | x:" + outputFeature0.getFloatValue(i) + ", y:" + outputFeature0.getFloatValue(i+1));
+
             }
             //items.add(Landmark(ind, outputFeature1.getFloatValue(0), 0.toFloat(), 0.toFloat()))
             //items.add(Landmark(ind+1, outputFeature2.getFloatValue(0), 0.toFloat(), 0.toFloat()))
 
             /**DRAW TO SCREEN**/
+            if (paused){
+                return;
+            }
 //            landmarkRenderer.drawLandmarks(items)
-
-
 
 //            var bitmap = Bitmap.createBitmap(drawView.width, drawView.height, Bitmap.Config.RGB_565)
             SurfaceHolder surfaceHolder = drawView.getHolder();
@@ -480,38 +460,64 @@ public class TFLiteModel {
 
 
             float radius = 20f;
-            int w = drawView.getWidth();//canvas.width
-            int h = drawView.getHeight();//canvas.height
-            System.out.println("cw, ch: " + w + " " + h);
-            float minx = (float) w;
-            float miny = (float) h;
+            float w = drawView.getWidth();//canvas.width
+            float h = drawView.getHeight();//canvas.height
+//            System.out.println("cw, ch: " + w + " " + h);
+            float minx = w;
+            float miny = h;
             float maxx = 0f;
             float maxy = 0f;
-            float prevminx = (float) w;
+//            float prevminx = w;
+            float x;
+            float y;
+
+            /// 0, 0 is the top left corner
             for (Landmark item : items)
             {
-                float x = (float) (item.x / 224.0) * w;
-                float y = (float) (item.y / 224.0) * h;
-
-                //get second smallest for minx to kill outlier
-                if(x < minx)
-                {
-                    prevminx = minx;
-                    minx = x;
+                if (item.x == 0.0){
+                    continue;
                 }
+                x = (float) (w - (item.x / 224.0) * w);
+                y = (float) (item.y / 224.0) * h;
+
+                minx = Math.min(minx, x);
                 miny = Math.min(miny, y);
                 maxx = Math.max(maxx, x);
                 maxy = Math.max(maxy, y);
-
-                canvas.drawCircle(x,y, radius, red);
+                if(showLandmarks){
+                    canvas.drawCircle(x,y, radius, red);
+                }
             }
 
+            int centerx = (int) ((maxx-minx)/2 +minx);
+            int centery = (int) ((maxy-miny)/2 + miny);
             //draw bbox
-            canvas.drawRect(prevminx, miny, maxx, maxy, rpaint);
-            canvas.drawCircle((maxx-prevminx)/2 +prevminx, (maxy-miny)/2 + miny, 20f, rpaint);
+            canvas.drawRect(minx, miny, maxx, maxy, rpaint);
+            canvas.drawCircle(centerx, centery, 20f, rpaint);
 
+            //mouse controle lines
+            float controle_left = w/3;
+            float controle_right = 2*w/3;
+            float controle_down = 3*h/4;
+            float controle_up = h/3;
+
+            //hlines
+            canvas.drawLine(0, controle_up,  w, controle_up, black);
+            canvas.drawLine(0, controle_down,  w, controle_down,black);
+            //vlines
+            canvas.drawLine(controle_left, 0,  controle_left, h, black);
+            canvas.drawLine(controle_right, 0,  controle_right, h, black);
+
+            //blMouse controles
+            int deltax = 0;
+            int deltay = 0;
+            deltax = (centerx < controle_left)? -5 : deltax; // less than means to the left
+            deltax = (centerx > controle_right)? 5 : deltax; // greater than mean to the right
+            deltay = (centery > controle_down)? -5 : deltay; // greater than means below
+            deltay = (centery < controle_up)? 5 : deltay; // less than means above
+
+            mouse.moveCommand(deltax, deltay);
             surfaceHolder.unlockCanvasAndPost(canvas);
-
 
             // Close the image,this tells CameraX to feed the next image to the analyzer
             imageProxy.close();

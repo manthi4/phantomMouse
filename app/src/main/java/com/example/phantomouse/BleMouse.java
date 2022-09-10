@@ -156,6 +156,7 @@ public class BleMouse {
             mBtDevice = device;
             Boolean connectionRequested = mBlHidDevice.connect(device);
         }
+
     }
 
     public void moveCommand(int x, int y) {

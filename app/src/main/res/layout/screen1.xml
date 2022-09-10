@@ -74,7 +74,7 @@
                         android:layout_margin="10dp"
                         android:layout_weight="1"
                         android:padding="10dp"
-                        android:text="@string/hue_toggle"
+                        android:text="&quot;---&quot;"
                         android:textColor="#283593" />
 
                 </LinearLayout>

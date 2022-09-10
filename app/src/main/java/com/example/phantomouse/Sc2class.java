@@ -15,7 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 
-import com.google.mediapipe.components.PermissionHelper;
+//import com.google.mediapipe.components.PermissionHelper;
 
 
 public class Sc2class extends Fragment {
@@ -55,11 +55,11 @@ public class Sc2class extends Fragment {
 //        mPipe.onPause();
     }
 
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        PermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
+//    @Override
+//    public void onRequestPermissionsResult(
+//            int requestCode, String[] permissions, int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        PermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//    }
 
 }

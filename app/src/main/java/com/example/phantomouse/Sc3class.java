@@ -53,7 +53,10 @@ public class Sc3class extends Fragment {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
         recV.setLayoutManager(linearLayoutManager);
         recV.setAdapter(cardAdapter);
+
         updateDeviceList();
+        cardAdapter.notifyDataSetChanged();
+
         Button refresh = getView().findViewById(R.id.refresh);
         refresh.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,4 +66,7 @@ public class Sc3class extends Fragment {
             }
         });
     }
+
+//    @Override
+//    public void onFocusChangeListener
 }
