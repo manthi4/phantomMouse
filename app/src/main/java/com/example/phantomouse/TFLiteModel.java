@@ -70,6 +70,11 @@ public class TFLiteModel {
 
     public Boolean showLandmarks;
     public Boolean showBBox;
+    public float controle_left_scale = 1f/3;
+    public float controle_right_scale = 2f/3;
+    public float controle_down_scale =  3f/4;
+    public float controle_up_scale = 1f/3;
+
     private Boolean paused = false;
 
     private ListenableFuture cameraProviderFuture;
@@ -496,10 +501,10 @@ public class TFLiteModel {
             canvas.drawCircle(centerx, centery, 20f, rpaint);
 
             //mouse controle lines
-            float controle_left = w/3;
-            float controle_right = 2*w/3;
-            float controle_down = 3*h/4;
-            float controle_up = h/3;
+            float controle_left = w * controle_left_scale;
+            float controle_right = w * controle_right_scale;
+            float controle_down = h * controle_down_scale;
+            float controle_up = h * controle_up_scale;
 
             //hlines
             canvas.drawLine(0, controle_up,  w, controle_up, black);
