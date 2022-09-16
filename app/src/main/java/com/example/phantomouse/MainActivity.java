@@ -11,6 +11,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 public class MainActivity extends AppCompatActivity {
 
     private BleMouse mouse = new BleMouse(this);
+    private TFLiteModel tfLiteModel = new TFLiteModel(mouse);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         //I added this if statement to keep the selected fragment when rotating the device
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.frameL,
-                    new Sc1class(mouse)).commit();
+                    new Sc1class(mouse, tfLiteModel)).commit();
         }
     }
 
@@ -36,10 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
                     switch (item.getItemId()) {
                         case R.id.nav_bluetooth:
-                            selectedFragment = new Sc1class(mouse);
+                            selectedFragment = new Sc1class(mouse, tfLiteModel);
                             break;
                         case R.id.nav_callibrate:
-                            selectedFragment = new Sc2class();
+                            selectedFragment = new Sc2class(tfLiteModel);
                             break;
                         case R.id.nav_settings:
                             selectedFragment = new Sc3class(mouse);

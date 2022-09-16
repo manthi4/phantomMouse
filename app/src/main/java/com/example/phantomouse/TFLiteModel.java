@@ -57,16 +57,17 @@ public class TFLiteModel {
 
 
     // {@link previewDisplayView} that displays the camera-preview frames.
-    private final PreviewView previewDisplayView;
+    private PreviewView previewDisplayView;
     // drawView where the landmarks are drawn
-    private final SurfaceView drawView;
+    private SurfaceView drawView;
 
-    private final Activity parentActivity;
-    private final TextView logZone;
+    private Activity parentActivity;
+    private TextView logZone;
     private final BleMouse mouse;
-    private final Context parentContext;
+    private Context parentContext;
     private Camera camera;
     private Executor cameraExecutor;
+    private ImageAnalysis imageAnalyzer;
 
     public Boolean showLandmarks;
     public Boolean showBBox;
@@ -79,16 +80,19 @@ public class TFLiteModel {
 
     private ListenableFuture cameraProviderFuture;
 
-
-    public TFLiteModel(PreviewView previewDisplayView, SurfaceView drawingView, View view, Context context, Activity activity, TextView logZone, BleMouse mouse) {
-
+    public TFLiteModel(BleMouse mouse){
         this.mouse = mouse;
+    }
+
+
+    public void init(PreviewView previewDisplayView, SurfaceView drawingView, View view, Context context, Activity activity, TextView logZone) {
         this.parentActivity = activity;
         this.previewDisplayView = previewDisplayView;
         this.drawView = drawingView;
         this.logZone = logZone;
         this.parentContext = context;
         this.cameraExecutor = Executors.newSingleThreadExecutor();
+
 
         this.showLandmarks = false;
         this.showBBox = true;
@@ -100,9 +104,13 @@ public class TFLiteModel {
         // Request camera permissions
         checkAndRequestPermissions();
         startCamera();
+    }
 
-
-
+    public void updateViews(PreviewView previewDisplayView, SurfaceView drawingView){
+        this.previewDisplayView = previewDisplayView;
+        this.drawView = drawingView;
+        drawView.setZOrderOnTop(true);
+        drawView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
     }
 
 //    Check all permissions are granted - use for Camera permission in this example.
@@ -269,12 +277,11 @@ public class TFLiteModel {
         }
         System.out.println("paused");
 
-//        ImageAnalyzer.
+
     }
 
     public void startCamera() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this.parentContext);
-
 
         cameraProviderFuture.addListener(new Runnable(){
             @Override
@@ -297,7 +304,6 @@ public class TFLiteModel {
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build();
                     imageAnalyzer.setAnalyzer(cameraExecutor, new ImageAnalyzer(parentContext));
-
 
                     // Select camera, back is the default. If it is not available, choose front camera
                     CameraSelector cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA;

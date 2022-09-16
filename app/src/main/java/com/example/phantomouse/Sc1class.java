@@ -24,24 +24,23 @@ import java.util.ArrayList;
 
 
 public class Sc1class extends Fragment {
-    private static final String TAG = "S2ClassFrag";
-//    private MPipe mPipe;
+    private static final String TAG = "S1ClassFrag";
     private TFLiteModel tfLiteModel;
     private  TextView newtext;
-
     private BleMouse mouse;
+    private PreviewView prev;
+    private SurfaceView draw;
 
-
-    public Sc1class(BleMouse mouse){
+    public Sc1class(BleMouse mouse, TFLiteModel tfLiteModel){
         super();
         this.mouse = mouse;
+        this.tfLiteModel = tfLiteModel;
 
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         return inflater.inflate(R.layout.screen1, container, false);
     }
 
@@ -49,7 +48,11 @@ public class Sc1class extends Fragment {
     public void onStart() {
         super.onStart();
         newtext = (TextView) getActivity().findViewById(R.id.logMessage);
-        logit("hi");
+        logit("On device logging zone: ");
+        prev = getView().findViewById(R.id.previewDisplaySurface);
+        draw = getView().findViewById(R.id.drawingSurface);
+
+        tfLiteModel.init(prev, draw, getView(), getContext(), getActivity(), newtext);
 
         Switch landmarkToggle = getActivity().findViewById(R.id.switch1);
         landmarkToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -59,13 +62,6 @@ public class Sc1class extends Fragment {
             }
         });
 
-
-
-        PreviewView prev = getView().findViewById(R.id.previewDisplaySurface);
-        SurfaceView draw = getView().findViewById(R.id.drawingSurface);
-
-        tfLiteModel = new TFLiteModel(prev, draw, getView(), getContext(), getActivity(), newtext, mouse);
-//        mPipe = new MPipe(new SurfaceView(getContext()), getView(), getContext(), getActivity(), newtext, mouse); //new SurfaceView(getContext()), getView(), getContext(), getActivity()
     }
 
     public void logit(String s){
@@ -75,6 +71,7 @@ public class Sc1class extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+//        tfLiteModel.updateViews(prev, draw);
         tfLiteModel.onResume();
     }
 
@@ -82,7 +79,6 @@ public class Sc1class extends Fragment {
     public void onPause() {
         super.onPause();
         tfLiteModel.onPause();
-
     }
 
 //    @Override
