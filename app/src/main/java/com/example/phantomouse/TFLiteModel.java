@@ -256,6 +256,7 @@ public class TFLiteModel {
 
     public void onResume() {
         // Request camera permissions
+        paused = false;
         checkAndRequestPermissions();
         startCamera();
         previewDisplayView.setVisibility(View.VISIBLE);
@@ -404,6 +405,7 @@ public class TFLiteModel {
             if (paused){
                 return;
             }
+
             ArrayList<Landmark> items = new ArrayList<Landmark>();
 
             // TODO 2: Convert Image to Bitmap then to TensorImage -> then to ByteBuffer for hand tracking

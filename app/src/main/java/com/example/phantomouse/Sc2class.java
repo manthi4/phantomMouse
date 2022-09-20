@@ -19,6 +19,7 @@ import androidx.camera.view.PreviewView;
 import androidx.fragment.app.Fragment;
 
 
+
 //import com.google.mediapipe.components.PermissionHelper;
 
 
@@ -52,12 +53,66 @@ public class Sc2class extends Fragment {
         tfLiteModel.onResume();
 
         SeekBar seekBar_r = getView().findViewById(R.id.right_contrl);
-        seekBar_r.setMax(100);
-        seekBar_r.setProgress(66);
+        seekBar_r.setMax(50);
+        seekBar_r.setProgress(25);
         seekBar_r.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tfLiteModel.controle_right_scale = progress/seekBar.getMax();
+                tfLiteModel.controle_right_scale = 0.5f + (progress / ((float)seekBar.getMax()*2));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        SeekBar seekBar_l = getView().findViewById(R.id.left_contrl);
+        seekBar_l.setMax(50);
+        seekBar_l.setProgress(25);
+        seekBar_l.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tfLiteModel.controle_left_scale = 0f + (progress / ((float)seekBar.getMax()*2));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        SeekBar seekBar_u = getView().findViewById(R.id.up_contrl);
+        seekBar_u.setMax(50);
+        seekBar_u.setProgress(25);
+        seekBar_u.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tfLiteModel.controle_up_scale = 0f + (progress / ((float)seekBar.getMax()*2));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+
+        SeekBar seekBar_d = getView().findViewById(R.id.down_contrl);
+        seekBar_d.setMax(50);
+        seekBar_d.setProgress(25);
+        seekBar_d.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tfLiteModel.controle_down_scale = 0.5f + (progress / ((float)seekBar.getMax()*2));
             }
 
             @Override
