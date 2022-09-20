@@ -70,6 +70,7 @@ public class TFLiteModel {
 
     public Boolean showLandmarks;
     public Boolean showBBox;
+    public float sensitivity = 10;
     public float controle_left_scale = 1f/3;
     public float controle_right_scale = 2f/3;
     public float controle_down_scale =  3f/4;
@@ -514,16 +515,30 @@ public class TFLiteModel {
             canvas.drawLine(controle_right, 0,  controle_right, h, black);
 
             //blMouse controles
-            int deltax = 0;
-            int deltay = 0;
-            deltax = (centerx < controle_left)? -5 : deltax; // less than means to the left
-            deltax = (centerx > controle_right)? 5 : deltax; // greater than mean to the right
-            deltay = (centery > controle_down)? -5 : deltay; // greater than means below
-            deltay = (centery < controle_up)? 5 : deltay; // less than means above
+            float deltax = 0;
+            float deltay = 0;
+            boolean command = false;
 
-            mouse.moveCommand(deltax, deltay);
+            if (centerx < controle_left){// less than means to the left
+                command = true;
+                deltax = (centerx - controle_left)*sensitivity; // negative goes left
+            }
+            if (centerx > controle_right){// // greater than mean to the right
+                command = true;
+                deltax = (centerx - controle_right)*sensitivity; // positive goes right
+            }
+            if (centery > controle_down){// greater than means below
+                command = true;
+                deltax = -1*(centery - controle_down)*sensitivity; // negative goes down?
+            }
+            if (centery < controle_up){// // greater than mean to the right
+                command = true;
+                deltax = -1*(centery - controle_up)*sensitivity; // positive goes up?
+            }
+            if(command){
+                mouse.moveCommand((int)deltax, (int)deltay);
+            }
             surfaceHolder.unlockCanvasAndPost(canvas);
-
             // Close the image,this tells CameraX to feed the next image to the analyzer
             imageProxy.close();
         }
